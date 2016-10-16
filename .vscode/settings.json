@@ -1,0 +1,7 @@
+{
+    "files.exclude": {
+        "main": true,
+        "main.exe": true,
+        "*.o": true
+    }
+}
