@@ -47,7 +47,7 @@ struct Context {
 
 
 template<typename T>
-Ptr<T> box(Context *ctx, T value) {
+inline Ptr<T> box(Context *ctx, T value) {
     Box<T> *box = ctx->arena->alloc< Box<T> >();
     box->type = get_type(Traits<T>::type);
     box->value = value;
@@ -76,8 +76,20 @@ Ptr<String> string(Context *ctx, const char *text) {
     return box(ctx, String((int)text_len, text_copy));
 }
 
-Ptr<Cons> cons(Context *ctx, Any *car, Any *cdr) {
+inline Ptr<Cons> cons(Context *ctx, Any *car, Any *cdr) {
     return box(ctx, Cons(car, cdr));
+}
+inline Ptr<Cons> list(Context *ctx, Any *a) {
+    return cons(ctx, a, &NIL);
+}
+inline Ptr<Cons> list(Context *ctx, Any *a, Any *b) {
+    return cons(ctx, a, cons(ctx, b, &NIL));
+}
+inline Ptr<Cons> list(Context *ctx, Any *a, Any *b, Any *c) {
+    return cons(ctx, a, cons(ctx, b, cons(ctx, c, &NIL)));
+}
+inline Ptr<Cons> list(Context *ctx, Any *a, Any *b, Any *c, Any *d) {
+    return cons(ctx, a, cons(ctx, b, cons(ctx, c, cons(ctx, d, &NIL))));
 }
 
 inline bool typep(Any *form) {

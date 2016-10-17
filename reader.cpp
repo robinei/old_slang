@@ -44,8 +44,7 @@ public:
         } else if (ch == '\'') {
             step();
             Any *form = read_form();
-            result = cons(ctx, symbol(ctx, "quote"),
-                        cons(ctx, form, &NIL));
+            result = list(ctx, symbol(ctx, "quote"), form);
         } else if (ch == '"') {
             step();
             result = read_string();
@@ -61,9 +60,7 @@ public:
             step();
             skip_space();
             Any *sym = read_symbol();
-            result = cons(ctx, symbol(ctx, "prop"),
-                        cons(ctx, sym,
-                            cons(ctx, result, &NIL)));
+            result = list(ctx, symbol(ctx, "prop"), sym, result);
             skip_space();
         }
         if (peek() == '[') {
@@ -74,10 +71,8 @@ public:
         }
         if (peek() == ':') {
             step();
-            Any *form = read_form();
-            result = cons(ctx, symbol(ctx, "ascribe"),
-                        cons(ctx, result,
-                            cons(ctx, form, &NIL)));
+            Any *typeform = read_form();
+            result = list(ctx, symbol(ctx, "ascribe"), result, typeform);
         }
         return result;
     }
