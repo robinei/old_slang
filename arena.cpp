@@ -49,6 +49,7 @@ public:
 
 private:
     Arena(const Arena &); // disallow
+    Arena &operator=(const Arena &); // disallow
 
     struct Chunk {
         Chunk *next;

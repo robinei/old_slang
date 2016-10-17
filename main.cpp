@@ -13,7 +13,7 @@ void fatal_error(const char *fmt, ...) {
     vprintf(fmt, args);
     va_end(args);
     printf("\n");
-    abort();
+    exit(1);
 }
 
 #include "stdstub.cpp"
@@ -42,8 +42,6 @@ struct Context {
     SymbolTable symbols;
     LocationTable locations;
     Module *module;
-
-    int last_line; // print state
 };
 
 
@@ -105,59 +103,7 @@ inline Any *cadr(Any *form) {
 }
 
 #include "reader.cpp"
-
-void print_form(Context *ctx, Any *form) {
-    switch (form->type->type) {
-    case TYPE_SYMBOL: {
-        Ptr<Symbol> sym(form);
-        printf("%s", sym->data);
-        break;
-    }
-    case TYPE_STRING: {
-        Ptr<String> str(form);
-        // TODO: escape the output
-        printf("\"%s\"", str->data);
-        break;
-    }
-    case TYPE_CONS: {
-        printf("(");
-        while (form != &NIL) {
-            Ptr<Cons> cons(form);
-
-            // try to preserve whitespace when printing forms that were read
-            // (for which we remember the locations of the car forms of all conses)
-            SourceLoc loc;
-            if (ctx->locations.get(cons, loc)) {
-                if (ctx->last_line < loc.line) {
-                    do {
-                        printf("\n");
-                        ++ctx->last_line;
-                    } while (ctx->last_line < loc.line);
-                    for (int i = 0; i < loc.col; ++i) {
-                        printf(" ");
-                    }
-                }
-            }
-
-            print_form(ctx, cons->car);
-
-            form = cons->cdr;
-            if (form != &NIL) {
-                printf(" ");
-            }
-        }
-        printf(")");
-        break;
-    }
-    case TYPE_BOOL:
-        if (form == &TRUE) {
-            printf("#t");
-        } else {
-            printf("#f");
-        }
-        break; 
-    }
-}
+#include "printer.cpp"
 
 
 class Module {
@@ -245,7 +191,7 @@ public:
         vprintf(fmt, args);
         va_end(args);
         printf("\n");
-        abort();
+        exit(1);
     }
 };
 
@@ -289,8 +235,9 @@ int main(int argc, char *argv[]) {
         "    x.is_true)\n"
     );
     assert(form);
-    ctx.last_line = 0;
-    print_form(&ctx, form);
+
+    Printer printer(&ctx);
+    printer.print(form);
     printf("\n");
 
     Parser parser(&ctx);
@@ -311,7 +258,7 @@ int main(int argc, char *argv[]) {
 
     tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 
-    tcc_set_lib_path(s, "/usr/lib/tcc");
+    //tcc_set_lib_path(s, "/usr/lib/tcc");
 
     if (tcc_compile_string(s, c_program) < 0) {
         fprintf(stderr, "Error compiling C program\n");

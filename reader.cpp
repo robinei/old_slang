@@ -240,6 +240,6 @@ public:
         vprintf(fmt, args);
         va_end(args);
         printf("\n");
-        abort();
+        exit(1);
     }
 };

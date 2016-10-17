@@ -24,6 +24,7 @@ class HashTable {
     Entry *entries;
 
     HashTable(const HashTable &); // disallow
+    HashTable &operator=(const HashTable &); // disallow
 
 public:
     HashTable(uint32_t size = 16) {
@@ -49,33 +50,6 @@ public:
             resize(size * 2);
         }
         put(Entry(calc_hash(key), key, value));
-    }
-
-    void put(Entry entry) {
-        uint32_t start_index = entry.hash & (size - 1);
-        uint32_t probe = 0;
-
-        for (uint32_t i = 0; i < size; ++i, ++probe) {
-            uint32_t index = (start_index + i) & (size - 1);
-            Entry &slot = entries[index];
-
-            if (slot.hash == 0) {
-                ++used;
-                slot = entry;
-                return;
-            }
-
-            if (slot.hash == entry.hash && TEqualFunc()(slot.key, entry.key)) {
-                slot.value = entry.value;
-                return;
-            }
-
-            int slot_probe = distance_to_start_index(slot, index);
-            if (probe > slot_probe) {
-                probe = slot_probe;
-                swap(slot, entry);
-            }
-        }
     }
 
     bool remove(TKey key) {
@@ -105,6 +79,33 @@ public:
     }
 
 private:
+    void put(Entry entry) {
+        uint32_t start_index = entry.hash & (size - 1);
+        uint32_t probe = 0;
+
+        for (uint32_t i = 0; i < size; ++i, ++probe) {
+            uint32_t index = (start_index + i) & (size - 1);
+            Entry &slot = entries[index];
+
+            if (slot.hash == 0) {
+                ++used;
+                slot = entry;
+                return;
+            }
+
+            if (slot.hash == entry.hash && TEqualFunc()(slot.key, entry.key)) {
+                slot.value = entry.value;
+                return;
+            }
+
+            int slot_probe = distance_to_start_index(slot, index);
+            if (probe > slot_probe) {
+                probe = slot_probe;
+                swap(slot, entry);
+            }
+        }
+    }
+
     bool find(TKey key, uint32_t &index_out) const {
         if (used == 0) {
             return false;
