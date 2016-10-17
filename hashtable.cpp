@@ -3,7 +3,12 @@
 // https://github.com/goossaert/hashmap/blob/master/backshift_hashmap.cc
 // http://codecapsule.com/2013/11/17/robin-hood-hashing-backward-shift-deletion/
 
-template<typename TKey, typename TValue, typename THashFunc, typename TEqualFunc>
+template<
+    typename TKey,
+    typename TValue,
+    typename THashFunc = Hash<TKey>,
+    typename TEqualFunc = Equal<TKey>
+>
 class HashTable {
     struct Entry {
         uint32_t hash;

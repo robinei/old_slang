@@ -16,45 +16,10 @@ void fatal_error(const char *fmt, ...) {
 
 #include "stdstub.cpp"
 #include "murmur3.cpp"
+#include "functors.cpp"
 #include "hashtable.cpp"
 #include "arena.cpp"
 #include "types.cpp"
-
-
-struct StringHash {
-    uint32_t operator()(const char *key) {
-        uint32_t hash;
-        MurmurHash3_x86_32(key, strlen(key), 0, &hash);
-        return hash;
-    }
-};
-
-struct StringEqual {
-    bool operator()(const char *a, const char *b) {
-        return strcmp(a, b) == 0;
-    }
-};
-
-template<typename T>
-struct PointerHash {
-    uint32_t operator()(const T *ptr) const {
-        uint32_t val = (uint32_t)(intptr_t)ptr;
-        val = ~val + (val << 15);
-        val = val ^ (val >> 12);
-        val = val + (val << 2);
-        val = val ^ (val >> 4);
-        val = val * 2057;
-        val = val ^ (val >> 16);
-        return val;
-    }
-};
-
-template<typename T>
-struct Equal {
-    bool operator()(T a, T b) {
-        return a == b;
-    }
-};
 
 
 struct SourceLoc {
@@ -65,8 +30,8 @@ struct SourceLoc {
     SourceLoc(uint32_t line, uint32_t col) : line(line), col(col) {}
 };
 
-typedef HashTable<const char *, Box<Symbol> *, StringHash, StringEqual> SymbolTable;
-typedef HashTable<Any *, SourceLoc, PointerHash<Any>, Equal<Any *> > LocationTable;
+typedef HashTable<const char *, Box<Symbol> *> SymbolTable;
+typedef HashTable<Any *, SourceLoc> LocationTable;
 
 class Module;
 
@@ -286,7 +251,7 @@ public:
 
 
 int main(int argc, char *argv[]) {
-    HashTable<const char *, int, StringHash, StringEqual> hashtable;
+    HashTable<const char *, int> hashtable;
 
     hashtable.put("foo", 99);
     hashtable.put("bar", 435);
