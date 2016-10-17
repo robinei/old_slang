@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include <libtcc.h>
+
 void fatal_error(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -293,6 +295,44 @@ int main(int argc, char *argv[]) {
 
     Parser parser(&ctx);
     parser.parse_module(form);
+
+
+
+
+
+    const char *c_program =
+    "int testfunc1(int x, int y) { return x + y; }\n"; 
+
+    TCCState *s = tcc_new();
+    if (!s) {
+        fprintf(stderr, "Could not create tcc state\n");
+        exit(1);
+    }
+
+    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
+
+    tcc_set_lib_path(s, "/usr/lib/tcc");
+
+    if (tcc_compile_string(s, c_program) < 0) {
+        fprintf(stderr, "Error compiling C program\n");
+        exit(1);
+    }
+
+    if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0) {
+        fprintf(stderr, "Error relocating code\n");
+        exit(1);
+    }
+
+    typedef int (*TestFunc)(int, int);
+    TestFunc func = (TestFunc)tcc_get_symbol(s, "testfunc1");
+    if (!func) {
+        fprintf(stderr, "Error getting function pointer\n");
+        exit(1);
+    }
+
+    printf("func result: %d\n", func(100, 78));
+
+    tcc_delete(s);
 
     return 0;
 }

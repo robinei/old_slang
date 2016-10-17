@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I. -fno-exceptions -fno-rtti -std=c++98 -g
+CFLAGS=-I. -fno-exceptions -fno-rtti -std=c++98 -g -ldl -ltcc
 DEPS=$(wildcard *.h *.cpp *.c)
 
 main: $(DEPS)
