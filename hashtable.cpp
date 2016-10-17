@@ -94,6 +94,9 @@ public:
 
             swap(entries[curr_index], entries[next_index]);
         }
+
+        assert(0 && "control flow should not get here");
+        return false;
     }
 
 private:
