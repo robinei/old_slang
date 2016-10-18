@@ -1,13 +1,12 @@
 
-#include <unistd.h>  /* for write(), also available on Windows */
+#include <unistd.h>  // for write(), also available on Windows
 
-inline void *emulate_cc_new(size_t len) { \
+inline void *emulate_cc_new(size_t len) {
     void *p = malloc(len);
     if (p == 0) {
-        /* Don't use stdio (e.g. fputs), because that may want to allocate more
-        * memory.
-        */
-        (void)!write(2, "out of memory\n", 14);
+        // Don't use stdio (e.g. fputs), because that may want to allocate more
+        // memory.
+        write(2, "out of memory\n", 14);
         abort();
     }
     return p;

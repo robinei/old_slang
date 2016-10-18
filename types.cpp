@@ -39,17 +39,10 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-
-struct Type {
-    int type;
-    int size;
-    Type(int type, int size) : type(type), size(size) {}
-};
-
+struct Type;
 
 struct Any {
     Type *type;
-
     Any(Type *type) : type(type) {}
 };
 
@@ -83,6 +76,14 @@ struct Cons {
 };
 
 
+
+struct Type {
+    int type;
+    int size;
+    Box<Symbol> *name;
+    
+    Type(int type, int size) : type(type), size(size) {}
+};
 
 template<class T> struct Traits {
     static const int type = TYPE_UNKNOWN; 

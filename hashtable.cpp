@@ -62,12 +62,10 @@ public:
             uint32_t curr_index = (index + i) & (size - 1);
             uint32_t next_index = (index + i + 1) & (size - 1);
 
-            if (entries[next_index].hash == 0 ||
-                distance_to_start_index(entries[next_index], next_index) == 0) {
+            uint32_t next_hash = entries[next_index].hash;
+            if (next_hash == 0 || dist_to_start(next_hash, next_index) == 0) {
                 entries[curr_index].hash = 0;
-
                 --used; // TODO: shrink
-
                 return true;
             }
 
@@ -98,7 +96,7 @@ private:
                 return;
             }
 
-            int slot_probe = distance_to_start_index(slot, index);
+            int slot_probe = dist_to_start(slot.hash, index);
             if (probe > slot_probe) {
                 probe = slot_probe;
                 swap(slot, entry);
@@ -124,7 +122,7 @@ private:
             }
 
             if (slot.hash != 0) {
-                probe = distance_to_start_index(slot, index);
+                probe = dist_to_start(slot.hash, index);
             }
 
             if (i > probe) {
@@ -157,9 +155,9 @@ private:
         }
     }
 
-    uint32_t distance_to_start_index(const Entry &slot, int index_stored) const {
-        assert(slot.hash != 0);
-        uint32_t start_index = slot.hash & (size - 1);
+    uint32_t dist_to_start(int hash, int index_stored) const {
+        assert(hash != 0);
+        uint32_t start_index = hash & (size - 1);
         if (start_index <= index_stored) {
             return index_stored - start_index;
         }

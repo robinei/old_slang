@@ -33,14 +33,12 @@ struct SourceLoc {
 };
 
 typedef HashTable<const char *, Box<Symbol> *> SymbolTable;
-typedef HashTable<Any *, SourceLoc> LocationTable;
 
 class Module;
 
 struct Context {
     Arena *arena;
     SymbolTable symbols;
-    LocationTable locations;
     Module *module;
 };
 
@@ -114,13 +112,27 @@ inline Any *cadr(Any *form) {
     return car(cdr(form));
 }
 
+
+struct Param {
+    Box<Symbol> *name;
+};
+
+struct Func {
+    Box<Symbol> *name;
+};
+
+typedef HashTable<Any *, SourceLoc> LocationTable;
+
+class Module {
+public:
+    LocationTable locations;
+};
+
+
 #include "reader.cpp"
 #include "printer.cpp"
 
 
-class Module {
-public:
-};
 
 
 class Parser {
@@ -128,24 +140,18 @@ class Parser {
     Module *module;
 
 public:
-    Parser(Context *ctx) : ctx(ctx) {
+    Parser(Context *ctx) : ctx(ctx), module(ctx->module) {
 
     }
 
     void parse_module(Any *list) {
-        module = new Module;
-
-        while (list != &NIL) {
+        while (!nilp(list)) {
             Any *form = car(list);
             if (!consp(form)) {
                 parse_error(list, "only list forms are allowed at top-level");
             }
 
             Any *sym = car(form);
-            if (!symbolp(sym)) {
-                parse_error(form, "expected a top-level definition");
-            }
-
             if (sym == symbol(ctx, "def")) {
                 parse_func(form);
             } else {
@@ -193,7 +199,7 @@ public:
 
     void parse_error(Any *containing_cons, const char *fmt, ...) {
         SourceLoc loc;
-        if (ctx->locations.get(containing_cons, loc)) {
+        if (module->locations.get(containing_cons, loc)) {
             printf("line %d, col %d: ", loc.line + 1, loc.col + 1);
         } else {
             printf("unknown location: ");
@@ -234,17 +240,18 @@ int main(int argc, char *argv[]) {
 
     Arena arena;
     Context ctx;
+    Module module;
     ctx.arena = &arena;
+    ctx.module = &module;
 
     assert(symbol(&ctx, "foo") == symbol(&ctx, "foo"));
+    assert(symbol(&ctx, strdup("foo")) == symbol(&ctx, "foo"));
     assert(symbol(&ctx, "bar") == symbol(&ctx, "bar"));
     assert(symbol(&ctx, "foo") != symbol(&ctx, "bar"));
 
     Reader reader(&ctx);
     Any *form = reader.read_file(
-        "(def foo () #f)\n"
-        "(def bar[T] (x:T):bool\n"
-        "    x.is_true)\n"
+        "(def foo (x y) (+ x y))\n"
     );
     assert(form);
 

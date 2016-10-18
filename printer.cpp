@@ -1,7 +1,7 @@
 
 class Printer {
 public:
-    Printer(Context *ctx) : ctx(ctx) {}
+    Printer(Context *ctx) : ctx(ctx), module(ctx->module) {}
 
     void print(Any *form) {
         last_line = 0;
@@ -10,6 +10,7 @@ public:
 
 private:
     Context *ctx;
+    Module *module;
     int last_line;
     
     void print_form(Any *form) {
@@ -33,7 +34,7 @@ private:
                 // try to preserve whitespace when printing forms that were read
                 // (for which we remember the locations of the car forms of all conses)
                 SourceLoc loc;
-                if (ctx->locations.get(cons, loc)) {
+                if (module->locations.get(cons, loc)) {
                     if (last_line < loc.line) {
                         do {
                             printf("\n");

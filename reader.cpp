@@ -2,6 +2,7 @@
 
 class Reader {
     Context *ctx;
+    Module *module;
 
     const char *text;
     uint32_t pos;
@@ -11,7 +12,7 @@ class Reader {
     char scratch[SCRATCH_LEN];
 
 public:
-    Reader(Context *ctx) : ctx(ctx) {
+    Reader(Context *ctx) : ctx(ctx), module(ctx->module) {
     }
 
     Any *read_file(const char *text) {
@@ -34,9 +35,11 @@ public:
             ch = peek();
             if (ch == 't') {
                 step();
+                expect_delim(peek());
                 result = &TRUE;
             } else if (ch == 'f') {
                 step();
+                expect_delim(peek());
                 result = &FALSE;
             } else {
                 read_error("expected #t or #f");
@@ -48,28 +51,30 @@ public:
         } else if (ch == '"') {
             step();
             result = read_string();
-        } else if (is_alpha(ch) || ch == '_') {
+        } else if (is_alpha(ch) || is_symchar(ch)) {
             result = read_symbol();
         } else if (is_digit(ch)) {
             result = read_number();
         } else {
             read_error("expected an expression");
         }
-        skip_space();
-        if (peek() == '.') {
-            step();
+        while (true) {
             skip_space();
-            Any *sym = read_symbol();
-            result = list(ctx, symbol(ctx, "prop"), sym, result);
-            skip_space();
+            ch = peek();
+            if (ch == '.') {
+                step();
+                skip_space();
+                Any *sym = read_symbol();
+                result = list(ctx, symbol(ctx, "prop"), sym, result);
+            } else if (ch == '[') {
+                step();
+                Any *list = read_list(']');
+                result = cons(ctx, result, list);
+            } else {
+                break;
+            }
         }
-        if (peek() == '[') {
-            step();
-            Any *list = read_list(']');
-            result = cons(ctx, result, list);
-            skip_space();
-        }
-        if (peek() == ':') {
+        if (ch == ':') {
             step();
             Any *typeform = read_form();
             result = list(ctx, symbol(ctx, "ascribe"), result, typeform);
@@ -88,7 +93,7 @@ public:
         Any *form = read_form();
         Any *result = cons(ctx, form, read_list(end));
         // store location of all car forms, using the containing cons as key
-        ctx->locations.put(result, orig_loc); 
+        module->locations.put(result, orig_loc); 
         return result;
     }
 
@@ -149,7 +154,7 @@ public:
         uint32_t len = 0;
         while (true) {
             char ch = peek();
-            if (!is_alphanum(ch) && ch != '_') {
+            if (!is_alphanum(ch) && !is_symchar(ch)) {
                 if (len == 0) {
                     read_error("expected a symbol");
                 }
@@ -168,6 +173,7 @@ public:
     }
 
     Any *read_number() {
+        read_error("numbers not yet supported");
         return NULL;
     }
 
@@ -227,6 +233,43 @@ public:
     inline bool is_lower(char ch) { return ch >= 'a' && ch <= 'z'; }
     inline bool is_digit(char ch) { return ch >= '0' && ch <= '9'; }
     inline bool is_alphanum(char ch) { return is_alpha(ch) || is_digit(ch); }
+    inline bool is_symchar(char ch) {
+        switch (ch) {
+        case '_':
+        case '-':
+        case '=':
+        case '+':
+        case '*':
+        case '/':
+        case '?':
+        case '!':
+        case '&':
+        case '%':
+        case '^':
+        case '~':
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    void expect_delim(char ch) {
+        switch (ch) {
+        case ' ':
+        case '\t':
+        case '\f':
+        case '\v':
+        case '\r':
+        case '\n':
+        case '.':
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+            return;
+        }
+        read_error("expected delimiter after expression");
+    }
 
     void read_error(const char *fmt, ...) {
         printf("line %d, col %d: ", loc.line + 1, loc.col + 1);
