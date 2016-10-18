@@ -1,4 +1,8 @@
 
+#include <limits.h>
+#include <ctype.h>
+#include "strtoll.cpp"
+#include "strtod.cpp"
 
 class Reader {
     Context *ctx;
@@ -35,11 +39,11 @@ public:
             ch = peek();
             if (ch == 't') {
                 step();
-                expect_delim(peek());
+                expect_delim();
                 result = &TRUE;
             } else if (ch == 'f') {
                 step();
-                expect_delim(peek());
+                expect_delim();
                 result = &FALSE;
             } else {
                 read_error("expected #t or #f");
@@ -53,8 +57,9 @@ public:
             result = read_string();
         } else if (is_alpha(ch) || is_symchar(ch)) {
             result = read_symbol();
-        } else if (is_digit(ch)) {
+        } else if (is_digit(ch) || (ch == '+' || ch == '-') && is_digit(peek(1))) {
             result = read_number();
+            expect_delim();
         } else {
             read_error("expected an expression");
         }
@@ -173,8 +178,30 @@ public:
     }
 
     Any *read_number() {
-        read_error("numbers not yet supported");
-        return NULL;
+        errno = 0;
+        const char *end;
+        const char *start = text + pos;
+        i64 llval = my_strtoll(start, &end, 0);
+        if (start == end) {
+            read_error("error parsing number");
+        }
+        if (errno == ERANGE) {
+            read_error("number too large");
+        }
+        if (*end != '.') {
+            pos += (int)(end - start);
+            return box(ctx, llval);
+        }
+        start = text + pos;
+        f64 dval = my_strtod(start, &end);
+        if (start == end) {
+            read_error("error parsing number");
+        }
+        if (errno == ERANGE) {
+            read_error("number too large");
+        }
+        pos += (int)(end - start);
+        return box(ctx, dval);
     }
 
     inline char peek(int offset = 0) {
@@ -253,8 +280,8 @@ public:
         }
     }
 
-    void expect_delim(char ch) {
-        switch (ch) {
+    void expect_delim() {
+        switch (peek()) {
         case ' ':
         case '\t':
         case '\f':
@@ -262,6 +289,7 @@ public:
         case '\r':
         case '\n':
         case '.':
+        case ':':
         case '(':
         case ')':
         case '[':

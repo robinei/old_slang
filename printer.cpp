@@ -62,7 +62,57 @@ private:
             } else {
                 printf("#f");
             }
-            break; 
+            break;
+        case TYPE_I8: {
+            Ptr<i8> num(form);
+            printf("%d", (i32)*num);
+            break;
+        }
+        case TYPE_I16: {
+            Ptr<i16> num(form);
+            printf("%d", (i32)*num);
+            break;
+        }
+        case TYPE_I32: {
+            Ptr<i32> num(form);
+            printf("%d", (i32)*num);
+            break;
+        }
+        case TYPE_I64: {
+            Ptr<i64> num(form);
+            printf("%lld", (i64)*num);
+            break;
+        }
+        case TYPE_U8: {
+            Ptr<u8> num(form);
+            printf("%u", (u32)*num);
+            break;
+        }
+        case TYPE_U16: {
+            Ptr<u16> num(form);
+            printf("%u", (u32)*num);
+            break;
+        }
+        case TYPE_U32: {
+            Ptr<u32> num(form);
+            printf("%u", (u32)*num);
+            break;
+        }
+        case TYPE_U64: {
+            Ptr<u64> num(form);
+            printf("%llu", (u64)*num);
+            break;
+        }
+        case TYPE_F32: {
+            Ptr<f32> num(form);
+            printf("%f", (f64)*num);
+            break;
+        }
+        case TYPE_F64: {
+            Ptr<f64> num(form);
+            printf("%f", (f64)*num);
+            break;
+        }
         }
     }
 };

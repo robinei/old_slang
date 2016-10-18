@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <libtcc.h>
 
@@ -251,7 +252,7 @@ int main(int argc, char *argv[]) {
 
     Reader reader(&ctx);
     Any *form = reader.read_file(
-        "(def foo (x y) (+ x y))\n"
+        "(def foo (x y) (+ x y 123 55.6))\n"
     );
     assert(form);
 
