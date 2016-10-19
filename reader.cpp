@@ -57,7 +57,7 @@ public:
             result = read_string();
         } else if (is_alpha(ch) || is_symchar(ch)) {
             result = read_symbol();
-        } else if (is_digit(ch) || (ch == '+' || ch == '-') && is_digit(peek(1))) {
+        } else if (is_digit(ch) || ((ch == '+' || ch == '-') && is_digit(peek(1)))) {
             result = read_number();
             expect_delim();
         } else {

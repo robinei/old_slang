@@ -11,7 +11,7 @@ public:
 private:
     Context *ctx;
     Module *module;
-    int last_line;
+    u32 last_line;
     
     void print_form(Any *form) {
         switch (form->type->type) {
@@ -40,7 +40,7 @@ private:
                             printf("\n");
                             ++last_line;
                         } while (last_line < loc.line);
-                        for (int i = 0; i < loc.col; ++i) {
+                        for (u32 i = 0; i < loc.col; ++i) {
                             printf(" ");
                         }
                     }
@@ -80,7 +80,7 @@ private:
         }
         case TYPE_I64: {
             Ptr<i64> num(form);
-            printf("%lld", (i64)*num);
+            printf("%lld", (long long)*num);
             break;
         }
         case TYPE_U8: {
@@ -100,7 +100,7 @@ private:
         }
         case TYPE_U64: {
             Ptr<u64> num(form);
-            printf("%llu", (u64)*num);
+            printf("%llu", (unsigned long long)*num);
             break;
         }
         case TYPE_F32: {

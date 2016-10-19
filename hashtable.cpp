@@ -96,7 +96,7 @@ private:
                 return;
             }
 
-            int slot_probe = dist_to_start(slot.hash, index);
+            uint32_t slot_probe = dist_to_start(slot.hash, index);
             if (probe > slot_probe) {
                 probe = slot_probe;
                 swap(slot, entry);
@@ -132,7 +132,7 @@ private:
         return false;
     }
 
-    void resize(int new_size) {
+    void resize(uint32_t new_size) {
         uint32_t old_used = used;
         uint32_t old_size = size;
         Entry *old_entries = entries;
@@ -155,7 +155,7 @@ private:
         }
     }
 
-    uint32_t dist_to_start(int hash, int index_stored) const {
+    uint32_t dist_to_start(uint32_t hash, uint32_t index_stored) const {
         assert(hash != 0);
         uint32_t start_index = hash & (size - 1);
         if (start_index <= index_stored) {
