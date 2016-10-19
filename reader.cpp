@@ -181,6 +181,7 @@ public:
         errno = 0;
         const char *end;
         const char *start = text + pos;
+        // TODO: handle unsigned numbers
         i64 llval = my_strtoll(start, &end, 0);
         if (start == end) {
             read_error("error parsing number");
@@ -190,7 +191,56 @@ public:
         }
         if (*end != '.') {
             pos += (int)(end - start);
-            return box(ctx, llval);
+            char ch = peek();
+            if (ch == 'i') {
+                step();
+                ch = peek();
+                if (ch == '8') {
+                    step();
+                    // TODO: check that these numbers fit
+                    return box(ctx, (i8)llval);
+                }
+                if (ch == '1' && peek(1) == '6') {
+                    step();
+                    step();
+                    return box(ctx, (i16)llval);
+                }
+                if (ch == '6' && peek(1) == '4') {
+                    step();
+                    step();
+                    return box(ctx, (i64)llval);
+                }
+                if (ch == '3' && peek(1) == '2') {
+                    step();
+                    step();
+                    // leave if block, and go to default for 'i' suffix which is i32
+                }
+                return box(ctx, (i32)llval);
+            } else if (ch == 'u') {
+                step();
+                ch = peek();
+                if (ch == '8') {
+                    step();
+                    return box(ctx, (u8)llval);
+                }
+                if (ch == '1' && peek(1) == '6') {
+                    step();
+                    step();
+                    return box(ctx, (u16)llval);
+                }
+                if (ch == '6' && peek(1) == '4') {
+                    step();
+                    step();
+                    return box(ctx, (u64)llval);
+                }
+                if (ch == '3' && peek(1) == '2') {
+                    step();
+                    step();
+                    // leave if block, and go to default for 'u' suffix which is u32
+                }
+                return box(ctx, (u32)llval);
+            }
+            return box(ctx, (i64)llval);
         }
         start = text + pos;
         f64 dval = my_strtod(start, &end);
@@ -201,6 +251,22 @@ public:
             read_error("number too large");
         }
         pos += (int)(end - start);
+        char ch = peek();
+        if (ch == 'f') {
+            step();
+            ch = peek();
+            if (ch == '6' && peek(1) == '4') {
+                step();
+                step();
+                return box(ctx, (f32)dval);
+            }
+            if (ch == '3' && peek(1) == '2') {
+                step();
+                step();
+                // leave if block, and go to default for 'f' suffix which is f32
+            }
+            return box(ctx, (f32)dval);
+        }
         return box(ctx, dval);
     }
 
